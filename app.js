@@ -1,10 +1,9 @@
 import * as THREE from "three";
 
-let cubeColor = 0xed36e9;
-
 main();
 
 function main() {
+  let cubeColor = "#ED36E9";
   const canvas = document.querySelector("#c");
   console.log(`App.js loaded.`);
 
@@ -76,6 +75,24 @@ function main() {
   let light = new THREE.DirectionalLight(color, intensity);
   light.position.set(-1, 2, 4);
   scene.add(light);
+
+  let interactableArea = document.getElementsByClassName("interactableArea")[0];
+
+  interactableArea.addEventListener("click", changeColor);
+
+  function changeColor(event) {
+    // generate a random color
+    cubeColor =
+      "#" + (0x1000000 + Math.random() * 0xffffff).toString(16).substring(1, 7);
+    console.log(`Click received.`);
+    console.log(`\tThe new color: ${cubeColor}.`);
+
+    // change color
+    material.color.set(cubeColor);
+
+    // EPILEPSY WARNING
+    // requestAnimationFrame(changeColor);
+  }
 
   function render(time) {
     // convert 'time' to seconds
