@@ -1,0 +1,28 @@
+.root {
+  height: 100%;
+  /* width: 100%; */
+}
+
+.slatt {
+  color: red;
+  display: flex;
+  justify-content: center;
+}
+
+.slatt:hover {
+  font-size: xx-large;
+}
+
+.body {
+  margin: 0px;
+  height: 100%;
+  background-color: black;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.main {
+  display: flex;
+  justify-content: center;
+}
