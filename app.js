@@ -3,10 +3,8 @@ import * as THREE from "three";
 main();
 
 function main() {
-  let redAscending = false;
-  let blueAscending = false;
-  let greenAscending = false;
-  let cubeColor = [237.0, 54.0, 233.0];
+  let timeStep = 0.0;
+  let cubeColor = [0.0, 0.0, 0.0];
   let allowColorChanging = false;
   const canvas = document.querySelector("#c");
   console.log(`App.js loaded.`);
@@ -30,7 +28,7 @@ function main() {
   console.log(`canvas.width: ${canvas.width}`);
   console.log(`canvas.height: ${canvas.height}`);
 
-  addEventListener("resize", (event) => {
+  addEventListener("resize", () => {
     console.log(`aspect: ${window.innerWidth / window.innerHeight}`);
     console.log(`\twindowWidth: ${window.innerWidth}`);
     console.log(`\twindowHeight: ${window.innerHeight}`);
@@ -104,36 +102,11 @@ function main() {
         `Intial RGB values: ${cubeColor[0]}, ${cubeColor[1]}, ${cubeColor[2]}`
       );
 
-      if (cubeColor[0] < 10.0) {
-        // start ascending red values
-        redAscending = true;
-      }
-      if (cubeColor[0] > 250.0) {
-        redAscending = false;
-      }
-
-      if (cubeColor[1] < 10.0) {
-        blueAscending = true;
-      }
-      if (cubeColor[1] > 250.0) {
-        blueAscending = false;
-      }
-
-      if (cubeColor[2] < 10.0) {
-        greenAscending = true;
-      }
-      if (cubeColor[2] > 250.0) {
-        greenAscending = false;
-      }
-
-      redAscending ? ++cubeColor[0] : --cubeColor[0];
-      blueAscending ? ++cubeColor[1] : --cubeColor[1];
-      greenAscending ? ++cubeColor[2] : --cubeColor[2];
-
+      cubeColor = genRandomHexColor();
       console.log(`\tThe new color: ${cubeColor}.`);
 
       // change color
-      material.color.set(rgbToHex(cubeColor));
+      material.color.set(cubeColor);
 
       // EPILEPSY WARNING @ low delays
       setTimeout(() => {
@@ -142,12 +115,14 @@ function main() {
     }
   }
 
-  function render(time) {
+  function render() {
     // convert 'time' to seconds
-    time *= 0.0005;
+    timeStep += 0.001;
+    // console.log(`timeStep: ${timeStep}`);
 
-    cube.rotation.x = time;
-    cube.rotation.y = time;
+    cube.rotation.x = timeStep;
+    // cube.rotation.y = time;
+    cube.rotation.z = timeStep;
 
     renderer.render(scene, camera);
 
@@ -161,5 +136,68 @@ function main() {
     });
 
     return "#" + conversion.join("");
+  }
+
+  function genRandomHexColor() {
+    // generate a string like "#123edf".
+    let randomColorHex = [];
+    let numToHex = [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+    ];
+
+    for (let i = 0; i < 6; i++) {
+      // get num from 0 to 15
+      let randomNum = Math.floor(Math.random() * 16);
+      // console.log(`Random number: ${randomNum}`);
+
+      // map int to hex string
+      randomColorHex.push(numToHex[randomNum]);
+      // console.log(`randomColorHex: ${randomColorHex}`);
+    }
+
+    return "#" + randomColorHex.join("");
+  }
+
+  function hexToRGB(hex) {
+    let rgb = [];
+    let r, g, b;
+
+    if (hex.substring(1) == "#") {
+      hex = hex.substring(1, hex.length);
+    }
+
+    // extact red
+    r = hex.substring(2);
+    // convert
+    r = parseInt(r, 16);
+
+    // extract green
+    g = hex.substring(2, 4);
+    g = parseInt(g, 16);
+
+    // extract blue
+    b = hex.substring(4, 6);
+    b = parseInt(b, 16);
+
+    rgb.push(r);
+    rgb.push(g);
+    rgb.push(b);
+
+    return rgb;
   }
 }
