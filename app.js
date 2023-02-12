@@ -5,6 +5,7 @@ main();
 function main() {
   let timeStep = 0.0;
   let cubeColor = [0.0, 0.0, 0.0];
+  let endColor = [0.0, 0.0, 0.0];
   let allowColorChanging = false;
   const canvas = document.querySelector("#c");
   console.log(`App.js loaded.`);
@@ -92,21 +93,54 @@ function main() {
       : (allowColorChanging = true);
     console.log(`\tallowColorChanging: ${allowColorChanging}`);
 
+    console.log(
+      `cubeColor:\n\tr: ${cubeColor[0]}\n\tg: ${cubeColor[1]}\n\tb: ${cubeColor[2]}`
+    );
+    console.log(
+      `endColor:\n\tr: ${endColor[0]}\n\tg: ${endColor[1]}\n\tb: ${endColor[2]}`
+    );
+
     changeColor();
   }
 
   function changeColor() {
     if (allowColorChanging) {
-      // go up and down red, green, or blue
+      // "smooth transition" between colors:
+
+      // check if all elements in the arrays are equal
+      if (colorsLookSimilar(cubeColor, endColor)) {
+        // they are the same color: get a new color
+        endColor = hexToRGB(genRandomHexColor());
+        console.log(
+          `endColor:\n\tr: ${endColor[0]}\n\tg: ${endColor[1]}\n\tb: ${endColor[2]}`
+        );
+      } else {
+        // transition colors
+        if (cubeColor[0] < endColor[0]) {
+          cubeColor[0] += timeStep;
+        } else {
+          cubeColor[0] -= timeStep;
+        }
+
+        if (cubeColor[1] < endColor[1]) {
+          cubeColor[1] += timeStep;
+        } else {
+          cubeColor[1] -= timeStep;
+        }
+
+        if (cubeColor[2] < endColor[2]) {
+          cubeColor[2] += timeStep;
+        } else {
+          cubeColor[2] -= timeStep;
+        }
+      }
+
       console.log(
-        `Intial RGB values: ${cubeColor[0]}, ${cubeColor[1]}, ${cubeColor[2]}`
+        `cubeColor:\n\tr: ${cubeColor[0]}\n\tg: ${cubeColor[1]}\n\tb: ${cubeColor[2]}`
       );
 
-      cubeColor = genRandomHexColor();
-      console.log(`\tThe new color: ${cubeColor}.`);
-
       // change color
-      material.color.set(cubeColor);
+      material.color.set(rgbToHex(cubeColor));
 
       // EPILEPSY WARNING @ low delays
       setTimeout(() => {
@@ -177,12 +211,12 @@ function main() {
     let rgb = [];
     let r, g, b;
 
-    if (hex.substring(1) == "#") {
+    if (hex.substring(0, 1) == "#") {
       hex = hex.substring(1, hex.length);
     }
 
     // extact red
-    r = hex.substring(2);
+    r = hex.substring(0, 2);
     // convert
     r = parseInt(r, 16);
 
@@ -199,5 +233,39 @@ function main() {
     rgb.push(b);
 
     return rgb;
+  }
+
+  function colorsLookSimilar(a_rgb, b_rgb) {
+    // return boolean 'true' if 'a_rgb' with within a RGB range with 'b_rgb'
+    let redSimilar = false;
+    let greenSimilar = false;
+    let blueSimilar = false;
+
+    let similarityRange = 5;
+
+    if (
+      a_rgb[0] > b_rgb[0] - similarityRange &&
+      a_rgb[0] < b_rgb[0] + similarityRange
+    ) {
+      redSimilar = true;
+    }
+    if (
+      a_rgb[1] > b_rgb[1] - similarityRange &&
+      a_rgb[1] < b_rgb[1] + similarityRange
+    ) {
+      greenSimilar = true;
+    }
+    if (
+      a_rgb[2] > b_rgb[2] - similarityRange &&
+      a_rgb[2] < b_rgb[2] + similarityRange
+    ) {
+      blueSimilar = true;
+    }
+
+    if (redSimilar && greenSimilar && blueSimilar) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }
