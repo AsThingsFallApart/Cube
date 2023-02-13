@@ -4,8 +4,9 @@ main();
 
 function main() {
   let time = 0.0;
-  let timeStep = 0.1;
-  let rotationDecelerationFactor = 0.05;
+  let timeStep = 1.0;
+  let rotationDecelerationFactor = timeStep * 0.01;
+  let sizeScalarStep = 0.05;
   let cubeColor = [0.0, 0.0, 0.0];
   let endColor = [0.0, 0.0, 0.0];
   let allowColorChanging = false;
@@ -57,11 +58,9 @@ function main() {
   const scene = new THREE.Scene();
 
   // create the geometry for a box
-  let sizeScalar = 1.0;
-
-  let boxWidth = 1.0 * sizeScalar;
-  let boxHeight = 1.0 * sizeScalar;
-  let boxDepth = 1.0 * sizeScalar;
+  let boxWidth = 1.0;
+  let boxHeight = 1.0;
+  let boxDepth = 1.0;
   let geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
 
   // create a material for the box
@@ -82,11 +81,31 @@ function main() {
   let interactableArea = document.getElementsByClassName("interactableArea")[0];
 
   interactableArea.addEventListener("click", toggleColorChanging);
-  interactableArea.addEventListener("scroll", scaleSize);
+  interactableArea.addEventListener("wheel", scaleSize);
 
   requestAnimationFrame(render);
 
-  function scaleSize(event) {}
+  function scaleSize(event) {
+    console.log(`deltaY: ${event.deltaY}`);
+
+    // deltaY > 0 -> make bigger ("scroll in" feeling)
+    // deltaY < 0 -> make smaller ("zoom out" feeling)
+
+    if (event.deltaY > 0) {
+      cube.geometry.scale(
+        1.0 + sizeScalarStep,
+        1.0 + sizeScalarStep,
+        1.0 + sizeScalarStep
+      );
+    }
+    if (event.deltaY < 0) {
+      cube.geometry.scale(
+        1.0 - sizeScalarStep,
+        1.0 - sizeScalarStep,
+        1.0 - sizeScalarStep
+      );
+    }
+  }
 
   function toggleColorChanging() {
     console.log(`Click received.`);
