@@ -3,7 +3,9 @@ import * as THREE from "three";
 main();
 
 function main() {
-  let timeStep = 0.0;
+  let time = 0.0;
+  let timeStep = 0.1;
+  let rotationDecelerationFactor = 0.05;
   let cubeColor = [0.0, 0.0, 0.0];
   let endColor = [0.0, 0.0, 0.0];
   let allowColorChanging = false;
@@ -151,12 +153,12 @@ function main() {
 
   function render() {
     // convert 'time' to seconds
-    timeStep += 0.001;
-    // console.log(`timeStep: ${timeStep}`);
+    time += timeStep * rotationDecelerationFactor;
+    // console.log(`time: ${time}`);
 
-    cube.rotation.x = timeStep;
+    cube.rotation.x = time;
     // cube.rotation.y = time;
-    cube.rotation.z = timeStep;
+    cube.rotation.z = time;
 
     renderer.render(scene, camera);
 
