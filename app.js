@@ -8,10 +8,15 @@ function main() {
   let rotationDecelerationFactor = timeStep * 0.01;
   let sizeScalarStep = 0.05;
   let cubeColor = [0.0, 0.0, 0.0];
+  cubeColor = hexToRGB(genRandomHexColor());
   let endColor = [0.0, 0.0, 0.0];
   let allowColorChanging = false;
   const canvas = document.querySelector("#c");
-  console.log(`App.js loaded.`);
+  canvas.draggable = true;
+  let previousScreenX = 0;
+  let previousScreenY = 0;
+  let rotationXStep = 0.05;
+  let rotationYStep = 0.05;
 
   // let textNode = document.createElement("p");
 
@@ -83,11 +88,40 @@ function main() {
   interactableArea.addEventListener("click", toggleColorChanging);
   interactableArea.addEventListener("wheel", scaleSize);
 
+  canvas.addEventListener("drag", handleRotation);
+
   requestAnimationFrame(render);
 
-  function scaleSize(event) {
-    console.log(`deltaY: ${event.deltaY}`);
+  function handleRotation(event) {
+    console.log(`\tevent.button:\t\t${event.button}`);
 
+    let movementX = event.screenX - previousScreenX;
+    let movementY = event.screenY - previousScreenY;
+    console.log(`\tevent.movementX:\t${movementX}`);
+    console.log(`\tevent.movementY:\t${movementY}`);
+
+    if (event.button == 0) {
+      // "main button" (usually left mouse button) pressed
+      // console.log(`left mouse button pressed...`);
+      if (movementX > 0) {
+        cube.rotation.y += rotationYStep;
+      }
+      if (movementX < 0) {
+        cube.rotation.y += rotationYStep * -1;
+      }
+      if (movementY > 0) {
+        cube.rotation.x += rotationXStep;
+      }
+      if (movementY < 0) {
+        cube.rotation.x += rotationYStep * -1;
+      }
+    }
+
+    previousScreenX = event.screenX;
+    previousScreenY = event.screenY;
+  }
+
+  function scaleSize(event) {
     // deltaY > 0 -> make bigger ("scroll in" feeling)
     // deltaY < 0 -> make smaller ("zoom out" feeling)
 
@@ -175,9 +209,9 @@ function main() {
     time += timeStep * rotationDecelerationFactor;
     // console.log(`time: ${time}`);
 
-    cube.rotation.x = time;
+    // cube.rotation.x = time;
     // cube.rotation.y = time;
-    cube.rotation.z = time;
+    // cube.rotation.z = time;
 
     renderer.render(scene, camera);
 
