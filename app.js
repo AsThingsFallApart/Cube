@@ -13,6 +13,7 @@ function main() {
   endColor = hexToRGB(genRandomHexColor());
   let allowColorChanging = false;
   const canvas = document.querySelector("#c");
+  canvas.draggable = true;
   let previousScreenX = 0;
   let previousScreenY = 0;
   let rotationXStep = 0.05;
@@ -27,15 +28,8 @@ function main() {
 
   let windowWidth = window.innerWidth;
   let windowHeight = window.innerHeight;
-
-  console.log(`canvas.width: ${canvas.width}`);
-  console.log(`canvas.height: ${canvas.height}`);
-
   canvas.width = windowWidth;
   canvas.height = windowHeight;
-
-  console.log(`canvas.width: ${canvas.width}`);
-  console.log(`canvas.height: ${canvas.height}`);
 
   addEventListener("resize", () => {
     console.log(`aspect: ${window.innerWidth / window.innerHeight}`);
@@ -88,37 +82,47 @@ function main() {
   interactableArea.addEventListener("click", toggleColorChanging);
   interactableArea.addEventListener("wheel", scaleSize);
 
-  canvas.addEventListener("mousemove", handleRotation);
+  let invisibleDiv = document.createElement("div");
+  invisibleDiv.classList = "invisibleDiv";
+  console.dir(invisibleDiv);
+  interactableArea.appendChild(invisibleDiv);
+
+  canvas.addEventListener("dragstart", handleDragStart);
+  canvas.addEventListener("drag", handleRotation);
 
   requestAnimationFrame(render);
 
+  function handleDragStart(event) {
+    event.dataTransfer.setDragImage(invisibleDiv, 0, 0);
+    event.dataTransfer.dropEffect = "none";
+    event.dataTransfer.effectAllowed = "none";
+  }
+
   function handleRotation(event) {
-    console.log(event);
+    let movementX = event.screenX - previousScreenX;
+    let movementY = event.screenY - previousScreenY;
+    console.log(`\tevent.movementX:\t${movementX}`);
+    console.log(`\tevent.movementY:\t${movementY}`);
 
-    if (event.button == 0) {
-      let presseButton = event.button;
-      let movementX = event.movementX;
-      let movementY = event.movementY;
-      console.log(`\tevent.movementX:\t${movementX}`);
-      console.log(`\tevent.movementY:\t${movementY}`);
-
-      if (event.button == 0) {
-        // "main button" (usually left mouse button) pressed
-        // console.log(`left mouse button pressed...`);
-        if (movementX > 0) {
-          cube.rotation.y += rotationYStep;
-        }
-        if (movementX < 0) {
-          cube.rotation.y += rotationYStep * -1;
-        }
-        if (movementY > 0) {
-          cube.rotation.x += rotationXStep;
-        }
-        if (movementY < 0) {
-          cube.rotation.x += rotationYStep * -1;
-        }
+    if (event.buttons == 1) {
+      // "main button" (usually left mouse button) pressed
+      // console.log(`left mouse button pressed...`);
+      if (movementX > 0) {
+        cube.rotation.y += rotationYStep;
+      }
+      if (movementX < 0) {
+        cube.rotation.y += rotationYStep * -1;
+      }
+      if (movementY > 0) {
+        cube.rotation.x += rotationXStep;
+      }
+      if (movementY < 0) {
+        cube.rotation.x += rotationYStep * -1;
       }
     }
+
+    previousScreenX = event.screenX;
+    previousScreenY = event.screenY;
   }
 
   function scaleSize(event) {
@@ -141,11 +145,13 @@ function main() {
     }
   }
 
-  function toggleColorChanging() {
-    console.log(`Click received.`);
+  function toggleColorChanging(event) {
+    console.log(event);
+
     allowColorChanging
       ? (allowColorChanging = false)
       : (allowColorChanging = true);
+
     console.log(`\tallowColorChanging: ${allowColorChanging}`);
 
     console.log(
