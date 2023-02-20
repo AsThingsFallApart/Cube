@@ -10,9 +10,9 @@ function main() {
   let cubeColor = [0.0, 0.0, 0.0];
   cubeColor = hexToRGB(genRandomHexColor());
   let endColor = [0.0, 0.0, 0.0];
+  endColor = hexToRGB(genRandomHexColor());
   let allowColorChanging = false;
   const canvas = document.querySelector("#c");
-  canvas.draggable = true;
   let previousScreenX = 0;
   let previousScreenY = 0;
   let rotationXStep = 0.05;
@@ -88,37 +88,37 @@ function main() {
   interactableArea.addEventListener("click", toggleColorChanging);
   interactableArea.addEventListener("wheel", scaleSize);
 
-  canvas.addEventListener("drag", handleRotation);
+  canvas.addEventListener("mousemove", handleRotation);
 
   requestAnimationFrame(render);
 
   function handleRotation(event) {
-    console.log(`\tevent.button:\t\t${event.button}`);
-
-    let movementX = event.screenX - previousScreenX;
-    let movementY = event.screenY - previousScreenY;
-    console.log(`\tevent.movementX:\t${movementX}`);
-    console.log(`\tevent.movementY:\t${movementY}`);
+    console.log(event);
 
     if (event.button == 0) {
-      // "main button" (usually left mouse button) pressed
-      // console.log(`left mouse button pressed...`);
-      if (movementX > 0) {
-        cube.rotation.y += rotationYStep;
-      }
-      if (movementX < 0) {
-        cube.rotation.y += rotationYStep * -1;
-      }
-      if (movementY > 0) {
-        cube.rotation.x += rotationXStep;
-      }
-      if (movementY < 0) {
-        cube.rotation.x += rotationYStep * -1;
+      let presseButton = event.button;
+      let movementX = event.movementX;
+      let movementY = event.movementY;
+      console.log(`\tevent.movementX:\t${movementX}`);
+      console.log(`\tevent.movementY:\t${movementY}`);
+
+      if (event.button == 0) {
+        // "main button" (usually left mouse button) pressed
+        // console.log(`left mouse button pressed...`);
+        if (movementX > 0) {
+          cube.rotation.y += rotationYStep;
+        }
+        if (movementX < 0) {
+          cube.rotation.y += rotationYStep * -1;
+        }
+        if (movementY > 0) {
+          cube.rotation.x += rotationXStep;
+        }
+        if (movementY < 0) {
+          cube.rotation.x += rotationYStep * -1;
+        }
       }
     }
-
-    previousScreenX = event.screenX;
-    previousScreenY = event.screenY;
   }
 
   function scaleSize(event) {
@@ -165,25 +165,27 @@ function main() {
       // check if all elements in the arrays are equal
       if (colorsLookSimilar(cubeColor, endColor)) {
         // they are the same color: get a new color
-        endColor = hexToRGB(genRandomHexColor());
+        let randomHexColor = genRandomHexColor();
+        let inRGB = hexToRGB(randomHexColor);
+        endColor = inRGB;
         console.log(
           `endColor:\n\tr: ${endColor[0]}\n\tg: ${endColor[1]}\n\tb: ${endColor[2]}`
         );
       } else {
         // transition colors
-        if (cubeColor[0] < endColor[0]) {
+        if (cubeColor[0] <= endColor[0]) {
           cubeColor[0] += timeStep;
         } else {
           cubeColor[0] -= timeStep;
         }
 
-        if (cubeColor[1] < endColor[1]) {
+        if (cubeColor[1] <= endColor[1]) {
           cubeColor[1] += timeStep;
         } else {
           cubeColor[1] -= timeStep;
         }
 
-        if (cubeColor[2] < endColor[2]) {
+        if (cubeColor[2] <= endColor[2]) {
           cubeColor[2] += timeStep;
         } else {
           cubeColor[2] -= timeStep;
@@ -259,7 +261,9 @@ function main() {
       // console.log(`randomColorHex: ${randomColorHex}`);
     }
 
-    return "#" + randomColorHex.join("");
+    let completeHexNotation = "#" + randomColorHex.join("");
+
+    return completeHexNotation;
   }
 
   function hexToRGB(hex) {
