@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Mesh } from "three";
 
 main();
 
@@ -7,29 +8,27 @@ function main() {
   let timeStep = 1.0;
   let rotationDecelerationFactor = timeStep * 0.01;
   let sizeScalarStep = 0.05;
+
   let cubeColor = [0.0, 0.0, 0.0];
   cubeColor = hexToRGB(genRandomHexColor());
+
   let endColor = [0.0, 0.0, 0.0];
   endColor = hexToRGB(genRandomHexColor());
+
   let allowColorChanging = false;
-  const canvas = document.querySelector("#c");
-  canvas.draggable = true;
+
   let previousScreenX = 0;
   let previousScreenY = 0;
   let rotationXStep = 0.05;
   let rotationYStep = 0.05;
 
-  // let textNode = document.createElement("p");
-
-  // textNode.textContent = "yuh";
-
-  // let body = document.getElementsByClassName("body")[0];
-  // body.appendChild(textNode);
-
   let windowWidth = window.innerWidth;
   let windowHeight = window.innerHeight;
-  canvas.width = windowWidth;
+
+  const canvas = document.querySelector("#c");
+  canvas.draggable = true;
   canvas.height = windowHeight;
+  canvas.width = windowWidth;
 
   addEventListener("resize", () => {
     console.log(`aspect: ${window.innerWidth / window.innerHeight}`);
@@ -60,14 +59,30 @@ function main() {
   let boxWidth = 1.0;
   let boxHeight = 1.0;
   let boxDepth = 1.0;
-  let geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+  let boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
 
-  // create a material for the box
-  let material = new THREE.MeshPhongMaterial({ color: rgbToHex(cubeColor) });
+  // create a material for whatever geometry
+  let phongMaterial = new THREE.MeshPhongMaterial({
+    color: rgbToHex(cubeColor),
+  });
 
-  let cube = new THREE.Mesh(geometry, material);
+  let cubeMesh = new THREE.Mesh(boxGeometry, phongMaterial);
 
-  scene.add(cube);
+  let sphereRadius = 50;
+  let sphereWidthSegments = 32;
+  let sphereHeightSegmens = 16;
+  let sphereGeometry = new THREE.SphereGeometry(
+    sphereRadius,
+    sphereWidthSegments,
+    sphereHeightSegmens
+  );
+
+  let sphereMesh = new THREE.Mesh(sphereGeometry, phongMaterial);
+
+  let meshMap = { 0: cubeMesh, 1: sphereMesh };
+  let meshMapIndex = 0;
+
+  scene.add(meshMap[meshMapIndex]);
 
   renderer.render(scene, camera);
 
@@ -84,13 +99,33 @@ function main() {
 
   let invisibleDiv = document.createElement("div");
   invisibleDiv.classList = "invisibleDiv";
-  console.dir(invisibleDiv);
   interactableArea.appendChild(invisibleDiv);
 
   canvas.addEventListener("dragstart", handleDragStart);
   canvas.addEventListener("drag", handleRotation);
 
+  // "global" events
+  addEventListener("keydown", changeMesh);
+
   requestAnimationFrame(render);
+
+  /* ======================================= FUNCTIONS ======================================== */
+
+  function changeMesh(event) {
+    if (event.ctrlKey == true) {
+      if (event.key == "x") {
+        if (meshMapIndex == Object.keys(meshMap).length - 1) {
+          scene.clear();
+          meshMapIndex = 0;
+          scene.add(meshMap[meshMapIndex]);
+        } else {
+          scene.clear();
+          meshMapIndex++;
+          scene.add(meshMap[meshMapIndex]);
+        }
+      }
+    }
+  }
 
   function handleDragStart(event) {
     event.dataTransfer.setDragImage(invisibleDiv, 0, 0);
@@ -101,23 +136,23 @@ function main() {
   function handleRotation(event) {
     let movementX = event.screenX - previousScreenX;
     let movementY = event.screenY - previousScreenY;
-    console.log(`\tevent.movementX:\t${movementX}`);
-    console.log(`\tevent.movementY:\t${movementY}`);
+    // console.log(`\tevent.movementX:\t${movementX}`);
+    // console.log(`\tevent.movementY:\t${movementY}`);
 
     if (event.buttons == 1) {
       // "main button" (usually left mouse button) pressed
       // console.log(`left mouse button pressed...`);
       if (movementX > 0) {
-        cube.rotation.y += rotationYStep;
+        cubeMesh.rotation.y += rotationYStep;
       }
       if (movementX < 0) {
-        cube.rotation.y += rotationYStep * -1;
+        cubeMesh.rotation.y += rotationYStep * -1;
       }
       if (movementY > 0) {
-        cube.rotation.x += rotationXStep;
+        cubeMesh.rotation.x += rotationXStep;
       }
       if (movementY < 0) {
-        cube.rotation.x += rotationYStep * -1;
+        cubeMesh.rotation.x += rotationYStep * -1;
       }
     }
 
@@ -130,14 +165,14 @@ function main() {
     // deltaY < 0 -> make smaller ("zoom out" feeling)
 
     if (event.deltaY > 0) {
-      cube.geometry.scale(
+      cubeMesh.geometry.scale(
         1.0 + sizeScalarStep,
         1.0 + sizeScalarStep,
         1.0 + sizeScalarStep
       );
     }
     if (event.deltaY < 0) {
-      cube.geometry.scale(
+      cubeMesh.geometry.scale(
         1.0 - sizeScalarStep,
         1.0 - sizeScalarStep,
         1.0 - sizeScalarStep
@@ -146,8 +181,6 @@ function main() {
   }
 
   function toggleColorChanging(event) {
-    console.log(event);
-
     allowColorChanging
       ? (allowColorChanging = false)
       : (allowColorChanging = true);
@@ -203,7 +236,7 @@ function main() {
       );
 
       // change color
-      material.color.set(rgbToHex(cubeColor));
+      phongMaterial.color.set(rgbToHex(cubeColor));
 
       // EPILEPSY WARNING @ low delays
       setTimeout(() => {
@@ -213,14 +246,6 @@ function main() {
   }
 
   function render() {
-    // convert 'time' to seconds
-    time += timeStep * rotationDecelerationFactor;
-    // console.log(`time: ${time}`);
-
-    // cube.rotation.x = time;
-    // cube.rotation.y = time;
-    // cube.rotation.z = time;
-
     renderer.render(scene, camera);
 
     requestAnimationFrame(render);
