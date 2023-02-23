@@ -67,7 +67,7 @@ function main() {
 
   let cubeMesh = new THREE.Mesh(boxGeometry, phongMaterial);
 
-  let sphereRadius = 1;
+  let sphereRadius = 0.7;
   let sphereWidthSegments = 32;
   let sphereHeightSegmens = 16;
   let sphereGeometry = new THREE.SphereGeometry(
@@ -135,7 +135,7 @@ function main() {
     console.log(meshObj[meshObjIndex].geometry);
 
     scene.remove(meshObj[meshObjIndex]);
-
+    ``;
     meshObjIndex++;
     // reset object iterator
     if (meshObjIndex == Object.keys(meshObj).length) {
@@ -163,16 +163,16 @@ function main() {
       // "main button" (usually left mouse button) pressed
       // console.log(`left mouse button pressed...`);
       if (movementX > 0) {
-        cubeMesh.rotation.y += rotationYStep;
+        meshObj[meshObjIndex].rotation.y += rotationYStep;
       }
       if (movementX < 0) {
-        cubeMesh.rotation.y += rotationYStep * -1;
+        meshObj[meshObjIndex].rotation.y += rotationYStep * -1;
       }
       if (movementY > 0) {
-        cubeMesh.rotation.x += rotationXStep;
+        meshObj[meshObjIndex].rotation.x += rotationXStep;
       }
       if (movementY < 0) {
-        cubeMesh.rotation.x += rotationYStep * -1;
+        meshObj[meshObjIndex].rotation.x += rotationYStep * -1;
       }
     }
 
@@ -185,14 +185,14 @@ function main() {
     // deltaY < 0 -> make smaller ("zoom out" feeling)
 
     if (event.deltaY > 0) {
-      cubeMesh.geometry.scale(
+      meshObj[meshObjIndex].geometry.scale(
         1.0 + sizeScalarStep,
         1.0 + sizeScalarStep,
         1.0 + sizeScalarStep
       );
     }
     if (event.deltaY < 0) {
-      cubeMesh.geometry.scale(
+      meshObj[meshObjIndex].geometry.scale(
         1.0 - sizeScalarStep,
         1.0 - sizeScalarStep,
         1.0 - sizeScalarStep
