@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { Mesh } from "three";
 
 main();
 
@@ -68,7 +67,7 @@ function main() {
 
   let cubeMesh = new THREE.Mesh(boxGeometry, phongMaterial);
 
-  let sphereRadius = 50;
+  let sphereRadius = 1;
   let sphereWidthSegments = 32;
   let sphereHeightSegmens = 16;
   let sphereGeometry = new THREE.SphereGeometry(
@@ -79,10 +78,13 @@ function main() {
 
   let sphereMesh = new THREE.Mesh(sphereGeometry, phongMaterial);
 
-  let meshMap = { 0: cubeMesh, 1: sphereMesh };
-  let meshMapIndex = 0;
+  let meshObj = { 0: cubeMesh, 1: sphereMesh };
+  let meshObjIndex = 0;
 
-  scene.add(meshMap[meshMapIndex]);
+  scene.add(meshObj[meshObjIndex]);
+
+  // let test3jsColor = new THREE.Color(0xcf7d9d);
+  // scene.background = test3jsColor;
 
   renderer.render(scene, camera);
 
@@ -105,26 +107,44 @@ function main() {
   canvas.addEventListener("drag", handleRotation);
 
   // "global" events
-  addEventListener("keydown", changeMesh);
+  addEventListener("keydown", handleGlobalKeydown);
 
   requestAnimationFrame(render);
 
   /* ======================================= FUNCTIONS ======================================== */
 
-  function changeMesh(event) {
+  function handleGlobalKeydown(event) {
     if (event.ctrlKey == true) {
       if (event.key == "x") {
-        if (meshMapIndex == Object.keys(meshMap).length - 1) {
-          scene.clear();
-          meshMapIndex = 0;
-          scene.add(meshMap[meshMapIndex]);
-        } else {
-          scene.clear();
-          meshMapIndex++;
-          scene.add(meshMap[meshMapIndex]);
-        }
+        changeMesh();
+      }
+      if (event.key == "b") {
+        printCurrentMesh();
       }
     }
+  }
+
+  function printCurrentMesh() {
+    console.dir(meshObj[meshObjIndex]);
+  }
+
+  function changeMesh() {
+    console.log(`Object.keys(meshObj).length:\t${Object.keys(meshObj).length}`);
+    console.log(`meshObjIndex:\t${meshObjIndex}`);
+
+    console.log(meshObj[meshObjIndex].geometry);
+
+    scene.remove(meshObj[meshObjIndex]);
+
+    meshObjIndex++;
+    // reset object iterator
+    if (meshObjIndex == Object.keys(meshObj).length) {
+      meshObjIndex = 0;
+    }
+    console.log(`Object.keys(meshObj):\t${Object.keys(meshObj)}`);
+    scene.add(meshObj[meshObjIndex]);
+
+    console.log(scene.children);
   }
 
   function handleDragStart(event) {
@@ -180,7 +200,7 @@ function main() {
     }
   }
 
-  function toggleColorChanging(event) {
+  function toggleColorChanging() {
     allowColorChanging
       ? (allowColorChanging = false)
       : (allowColorChanging = true);
