@@ -1,9 +1,10 @@
 import * as THREE from "three";
+import { VertexNormalsHelper } from "three/addons";
 
 main();
 
 function main() {
-  console.log("Press 'Shift + H' to show all keybinds.");
+  console.log("Press 'Shift + H' to print all keybinds.");
 
   let globalDelayStep = "10";
   let time = 0.0;
@@ -45,6 +46,8 @@ function main() {
   let rotationAllowed = true;
   let foreverIncrement = 0;
 
+  let allowNormalVisualization = false;
+
   addEventListener("resize", () => {
     console.log(`aspect: ${window.innerWidth / window.innerHeight}`);
     console.log(`\twindowWidth: ${window.innerWidth}`);
@@ -60,7 +63,7 @@ function main() {
   // create a 'PerspectiveCamera' object
   let fov = 75;
   let aspect = windowWidth / windowHeight;
-  let near = 0.1;
+  let near = 0.001;
   let far = 10;
   let camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
@@ -77,9 +80,6 @@ function main() {
   let boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
 
   let cubeMesh = new THREE.Mesh(boxGeometry, phongMaterial);
-  let cubeMesh2 = new THREE.Mesh(boxGeometry, phongMaterial);
-
-  cubeMesh2.translateX(2);
 
   let sphereRadius = 0.7;
   let sphereWidthSegments = 32;
@@ -96,7 +96,7 @@ function main() {
   let meshObjIndex = 0;
 
   scene.add(meshObj[meshObjIndex]);
-  scene.add(cubeMesh2);
+  // scene.add(cubeMesh2);
 
   renderer.render(scene, camera);
 
@@ -106,9 +106,27 @@ function main() {
   light.position.set(0, 1, 20);
   scene.add(light);
 
+  let arrowLength = 1;
+  let arrowColor = 0xff0000;
+  let cubeNormalsVisualizer = new VertexNormalsHelper(
+    meshObj[0],
+    arrowLength,
+    arrowColor
+  );
+  let sphereNormalsVisualizer = new VertexNormalsHelper(
+    meshObj[1],
+    arrowLength,
+    arrowColor
+  );
+  let normalsVisualizerObj = {
+    0: cubeNormalsVisualizer,
+    1: sphereNormalsVisualizer,
+  };
+  let normalsVisualizerObjIndex = 0;
+
   let interactableArea = document.getElementsByClassName("interactableArea")[0];
 
-  interactableArea.addEventListener("click", toggleColorChanging);
+  interactableArea.addEventListener("click", paintPoint);
   interactableArea.addEventListener("wheel", scaleSize);
 
   let invisibleDiv = document.createElement("div");
@@ -125,13 +143,36 @@ function main() {
 
   /* ======================================= FUNCTIONS ======================================== */
 
+  function toggleNormalVisualization() {
+    allowNormalVisualization
+      ? (allowNormalVisualization = false)
+      : (allowNormalVisualization = true);
+
+    handleNormalVisualization();
+  }
+
+  function handleNormalVisualization() {
+    if (allowNormalVisualization) {
+      scene.add(normalsVisualizerObj[normalsVisualizerObjIndex]);
+    } else {
+      scene.remove(normalsVisualizerObj[normalsVisualizerObjIndex]);
+    }
+  }
+
+  function paintPoint(event) {
+    console.log("Click!");
+    console.log(event);
+  }
+
   function printKeybinds() {
     console.log("Shift + X:\tToggle Wireframe");
     console.log("Shift + G:\tToggle Movement");
     console.log("Shift + B:\tToggle Rotation");
     console.log("Shift + H:\tPrint Keybinds");
+    console.log("Shift + E:\tCycle Colors");
+    console.log("Shift + N:\tVisualize Normals");
     console.log("Ctrl + X:\tCycle Meshes");
-    console.log("Ctrl + M:\tPrint Displayed Mesh");
+    console.log("Ctrl + M:\tPrint Mesh");
     console.log("Alt + X:\tToggle Lighting");
     console.log("Alt + G:\tToggle Translation");
 
@@ -246,6 +287,14 @@ function main() {
       if (event.key == "H") {
         printKeybinds();
       }
+
+      if (event.key == "E") {
+        toggleColorChanging();
+      }
+
+      if (event.key == "N") {
+        toggleNormalVisualization();
+      }
     }
 
     if (event.altKey == true) {
@@ -266,17 +315,27 @@ function main() {
     console.log(`Object.keys(meshObj).length:\t${Object.keys(meshObj).length}`);
     console.log(`meshObjIndex:\t${meshObjIndex}`);
 
-    console.log(meshObj[meshObjIndex].geometry);
-
     scene.remove(meshObj[meshObjIndex]);
-    ``;
+    scene.remove(normalsVisualizerObj[normalsVisualizerObjIndex]);
+
     meshObjIndex++;
-    // reset object iterator
+    normalsVisualizerObjIndex++;
+
+    // reset object iterators
     if (meshObjIndex == Object.keys(meshObj).length) {
       meshObjIndex = 0;
     }
     console.log(`Object.keys(meshObj):\t${Object.keys(meshObj)}`);
+
+    if (normalsVisualizerObjIndex == Object.keys(normalsVisualizerObj).length) {
+      normalsVisualizerObjIndex = 0;
+    }
+
     scene.add(meshObj[meshObjIndex]);
+
+    if (allowNormalVisualization) {
+      scene.add(normalsVisualizerObj[normalsVisualizerObjIndex]);
+    }
 
     console.log(scene.children);
   }
@@ -296,8 +355,8 @@ function main() {
     // console.log(
     //   `.getWorldDirection: ${meshObj[meshObjIndex].getWorldDirection()}`
     // );
-    console.log("up:");
-    console.dir(meshObj[meshObjIndex].up);
+    // console.log("up:");
+    // console.dir(meshObj[meshObjIndex].up);
     // console.log(
     //   `.localToWorld:${meshObj[meshObjIndex].localToWorld(
     //     meshObj[meshObjIndex.up]
@@ -350,14 +409,14 @@ function main() {
       ? (allowColorChanging = false)
       : (allowColorChanging = true);
 
-    console.log(`\tallowColorChanging: ${allowColorChanging}`);
+    // console.log(`\tallowColorChanging: ${allowColorChanging}`);
 
-    console.log(
-      `sharedColor:\n\tr: ${sharedColor.r}\n\tg: ${sharedColor.g}\n\tb: ${sharedColor.b}`
-    );
-    console.log(
-      `endColor:\n\tr: ${endColor.r}\n\tg: ${endColor.g}\n\tb: ${endColor.b}`
-    );
+    // console.log(
+    //   `sharedColor:\n\tr: ${sharedColor.r}\n\tg: ${sharedColor.g}\n\tb: ${sharedColor.b}`
+    // );
+    // console.log(
+    //   `endColor:\n\tr: ${endColor.r}\n\tg: ${endColor.g}\n\tb: ${endColor.b}`
+    // );
 
     changeColor();
   }
@@ -370,12 +429,12 @@ function main() {
       if (colorsLookSimilar(sharedColor.toArray(), endColor.toArray())) {
         // they are the same color: get a new color
         let randomHexTrip = genRandomHexTriplet();
-        console.log(`randomHexTrip:\t${randomHexTrip}`);
+        // console.log(`randomHexTrip:\t${randomHexTrip}`);
 
         endColor.setHex(randomHexTrip);
-        console.log(
-          `endColor:\n\tr: ${endColor.r}\n\tg: ${endColor.g}\n\tb: ${endColor.b}`
-        );
+        // console.log(
+        //   `endColor:\n\tr: ${endColor.r}\n\tg: ${endColor.g}\n\tb: ${endColor.b}`
+        // );
       } else {
         sharedColor.lerp(endColor, timeStep);
 
@@ -386,9 +445,9 @@ function main() {
         }
       }
 
-      console.log(
-        `sharedColor:\n\tr: ${sharedColor.r}\n\tg: ${sharedColor.g}\n\tb: ${sharedColor.b}`
-      );
+      // console.log(
+      //   `sharedColor:\n\tr: ${sharedColor.r}\n\tg: ${sharedColor.g}\n\tb: ${sharedColor.b}`
+      // );
 
       // console.log(`.getHexString():\t\t${sharedColor.getHexString()}`);
       // console.log(`.getHex():\t\t\t\t${sharedColor.getHex()}`);
@@ -409,6 +468,10 @@ function main() {
 
   function render() {
     renderer.render(scene, camera);
+
+    if (allowNormalVisualization) {
+      normalsVisualizerObj[normalsVisualizerObjIndex].update();
+    }
 
     requestAnimationFrame(render);
   }
