@@ -4,15 +4,18 @@ main();
 
 function main() {
   let time = 0.0;
-  let timeStep = 1.0;
+  let timeStep = 0.01;
+  let completenessRatio = 0.0;
   let rotationDecelerationFactor = timeStep * 0.01;
   let sizeScalarStep = 0.05;
 
   let sharedColor = new THREE.Color();
-  sharedColor = hexToRGB(genRandomHexColor());
+  let randHexTrip = genRandomHexTriplet();
+  sharedColor.setHex(randHexTrip);
+  // console.log(randHexTrip);
+  // console.log(`sharedColor:\t${sharedColor.getHex()}`);
 
-  let endColor = [0.0, 0.0, 0.0];
-  endColor = hexToRGB(genRandomHexColor());
+  let endColor = new THREE.Color();
 
   let allowColorChanging = false;
 
@@ -28,6 +31,9 @@ function main() {
   canvas.draggable = true;
   canvas.height = windowHeight;
   canvas.width = windowWidth;
+
+  let isLightingIgnored = false;
+  let basicMaterial = new THREE.MeshBasicMaterial({ color: sharedColor });
 
   addEventListener("resize", () => {
     console.log(`aspect: ${window.innerWidth / window.innerHeight}`);
@@ -62,7 +68,7 @@ function main() {
 
   // create a material for whatever geometry
   let phongMaterial = new THREE.MeshPhongMaterial({
-    color: rgbToHex(sharedColor),
+    color: sharedColor,
   });
 
   let cubeMesh = new THREE.Mesh(boxGeometry, phongMaterial);
@@ -113,8 +119,23 @@ function main() {
 
   /* ======================================= FUNCTIONS ======================================== */
 
+  function toggleLightingIgnore() {
+    isLightingIgnored
+      ? (isLightingIgnored = false)
+      : (isLightingIgnored = true);
+
+    if (isLightingIgnored) {
+      for (let key in meshObj) {
+        meshObj[key].material = basicMaterial;
+      }
+    } else {
+      for (let key in meshObj) {
+        meshObj[key].material = phongMaterial;
+      }
+    }
+  }
+
   function toggleWireframe() {
-    console.log(`phongMaterial.wireframe:\t${phongMaterial.wireframe}`);
     phongMaterial.wireframe
       ? (phongMaterial.wireframe = false)
       : (phongMaterial.wireframe = true);
@@ -134,6 +155,12 @@ function main() {
       if (event.key == "X") {
         console.log("Pressing shift + x...");
         toggleWireframe();
+      }
+    }
+
+    if (event.altKey == true) {
+      if (event.key == "x") {
+        toggleLightingIgnore();
       }
     }
   }
@@ -222,10 +249,10 @@ function main() {
     console.log(`\tallowColorChanging: ${allowColorChanging}`);
 
     console.log(
-      `sharedColor:\n\tr: ${sharedColor[0]}\n\tg: ${sharedColor[1]}\n\tb: ${sharedColor[2]}`
+      `sharedColor:\n\tr: ${sharedColor.r}\n\tg: ${sharedColor.g}\n\tb: ${sharedColor.b}`
     );
     console.log(
-      `endColor:\n\tr: ${endColor[0]}\n\tg: ${endColor[1]}\n\tb: ${endColor[2]}`
+      `endColor:\n\tr: ${endColor.r}\n\tg: ${endColor.g}\n\tb: ${endColor.b}`
     );
 
     changeColor();
@@ -236,42 +263,34 @@ function main() {
       // "smooth transition" between colors:
 
       // check if all elements in the arrays are equal
-      if (colorsLookSimilar(sharedColor, endColor)) {
+      if (colorsLookSimilar(sharedColor.toArray(), endColor.toArray())) {
         // they are the same color: get a new color
-        let randomHexColor = genRandomHexColor();
-        let inRGB = hexToRGB(randomHexColor);
-        endColor = inRGB;
+        let randomHexTrip = genRandomHexTriplet();
+        console.log(`randomHexTrip:\t${randomHexTrip}`);
+
+        endColor.setHex(randomHexTrip);
         console.log(
-          `endColor:\n\tr: ${endColor[0]}\n\tg: ${endColor[1]}\n\tb: ${endColor[2]}`
+          `endColor:\n\tr: ${endColor.r}\n\tg: ${endColor.g}\n\tb: ${endColor.b}`
         );
-        phongMaterial;
       } else {
-        // transition colors
-        if (sharedColor[0] <= endColor[0]) {
-          sharedColor[0] += timeStep;
-        } else {
-          sharedColor[0] -= timeStep;
-        }
+        sharedColor.lerp(endColor, timeStep);
 
-        if (sharedColor[1] <= endColor[1]) {
-          sharedColor[1] += timeStep;
-        } else {
-          sharedColor[1] -= timeStep;
-        }
+        completenessRatio += timeStep;
 
-        if (sharedColor[2] <= endColor[2]) {
-          sharedColor[2] += timeStep;
-        } else {
-          sharedColor[2] -= timeStep;
+        if (completenessRatio == 1.0) {
+          completenessRatio = 0.0;
         }
       }
 
       console.log(
-        `sharedColor:\n\tr: ${sharedColor[0]}\n\tg: ${sharedColor[1]}\n\tb: ${sharedColor[2]}`
+        `sharedColor:\n\tr: ${sharedColor.r}\n\tg: ${sharedColor.g}\n\tb: ${sharedColor.b}`
       );
 
-      // change color
-      phongMaterial.color.set(rgbToHex(sharedColor));
+      // prompt renderer to re-render object
+      // console.log(`.getHexString():\t\t${sharedColor.getHexString()}`);
+      // console.log(`.getHex():\t\t\t\t${sharedColor.getHex()}`);
+
+      phongMaterial.color.set(sharedColor.getHex());
 
       // EPILEPSY WARNING @ low delays
       setTimeout(() => {
@@ -295,8 +314,8 @@ function main() {
     return "#" + conversion.join("");
   }
 
-  function genRandomHexColor() {
-    // generate a string like "#123edf".
+  function genRandomHexTriplet() {
+    // generate a string like "123edf".
     let randomColorHex = [];
     let numToHex = [
       "0",
@@ -327,7 +346,7 @@ function main() {
       // console.log(`randomColorHex: ${randomColorHex}`);
     }
 
-    let completeHexNotation = "#" + randomColorHex.join("");
+    let completeHexNotation = "0x" + randomColorHex.join("");
 
     return completeHexNotation;
   }
@@ -366,7 +385,10 @@ function main() {
     let greenSimilar = false;
     let blueSimilar = false;
 
-    let similarityRange = 5;
+    let similarityRange = 0.1;
+
+    // console.log(`a_rgb:\t${a_rgb}`);
+    // console.log(`b_rgb:\t${b_rgb}`);
 
     if (
       a_rgb[0] > b_rgb[0] - similarityRange &&
