@@ -3,15 +3,17 @@ import * as THREE from "three";
 main();
 
 function main() {
+  console.log("Press 'Shift + H' to show all keybinds.");
+
+  let globalDelayStep = "10";
   let time = 0.0;
-  let timeStep = 0.01;
+  let timeStep = 0.005;
   let completenessRatio = 0.0;
   let rotationDecelerationFactor = timeStep * 0.01;
   let sizeScalarStep = 0.05;
 
   let sharedColor = new THREE.Color();
   sharedColor.setHex(genRandomHexTriplet());
-  // console.log(`sharedColor:\t${sharedColor.getHex()}`);
 
   let endColor = new THREE.Color();
   endColor.setHex(genRandomHexTriplet());
@@ -37,6 +39,11 @@ function main() {
     color: sharedColor,
   });
   let materialObj = { 0: phongMaterial, 1: basicMaterial };
+
+  let movementAllowed = false;
+  let translationAllowed = true;
+  let rotationAllowed = true;
+  let foreverIncrement = 0;
 
   addEventListener("resize", () => {
     console.log(`aspect: ${window.innerWidth / window.innerHeight}`);
@@ -70,6 +77,9 @@ function main() {
   let boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
 
   let cubeMesh = new THREE.Mesh(boxGeometry, phongMaterial);
+  let cubeMesh2 = new THREE.Mesh(boxGeometry, phongMaterial);
+
+  cubeMesh2.translateX(2);
 
   let sphereRadius = 0.7;
   let sphereWidthSegments = 32;
@@ -86,9 +96,7 @@ function main() {
   let meshObjIndex = 0;
 
   scene.add(meshObj[meshObjIndex]);
-
-  // let test3jsColor = new THREE.Color(0xcf7d9d);
-  // scene.background = test3jsColor;
+  scene.add(cubeMesh2);
 
   renderer.render(scene, camera);
 
@@ -108,7 +116,7 @@ function main() {
   interactableArea.appendChild(invisibleDiv);
 
   canvas.addEventListener("dragstart", handleDragStart);
-  canvas.addEventListener("drag", handleRotation);
+  canvas.addEventListener("drag", handleManualRotation);
 
   // "global" events
   addEventListener("keydown", handleGlobalKeydown);
@@ -116,6 +124,73 @@ function main() {
   requestAnimationFrame(render);
 
   /* ======================================= FUNCTIONS ======================================== */
+
+  function printKeybinds() {
+    console.log("Shift + X:\tToggle Wireframe");
+    console.log("Shift + G:\tToggle Movement");
+    console.log("Shift + B:\tToggle Rotation");
+    console.log("Shift + H:\tPrint Keybinds");
+    console.log("Ctrl + X:\tCycle Meshes");
+    console.log("Ctrl + M:\tPrint Displayed Mesh");
+    console.log("Alt + X:\tToggle Lighting");
+    console.log("Alt + G:\tToggle Translation");
+
+    console.log("");
+  }
+
+  function toggleMovement() {
+    movementAllowed ? (movementAllowed = false) : (movementAllowed = true);
+
+    handleTranslation();
+    handleRotation();
+  }
+
+  function toggleTranslation() {
+    translationAllowed
+      ? (translationAllowed = false)
+      : (translationAllowed = true);
+
+    handleTranslation();
+  }
+
+  function handleTranslation() {
+    if (movementAllowed) {
+      if (translationAllowed) {
+        foreverIncrement += 0.01;
+        let distance = Math.sin(foreverIncrement) / 200;
+        // console.log(`distance:\t${distance}`);
+
+        meshObj[meshObjIndex].translateOnAxis(
+          THREE.Object3D.DEFAULT_UP,
+          distance
+        );
+
+        setTimeout(handleTranslation, globalDelayStep);
+      }
+    }
+  }
+
+  function toggleRotation() {
+    rotationAllowed ? (rotationAllowed = false) : (rotationAllowed = true);
+
+    handleRotation();
+  }
+
+  function handleRotation() {
+    if (movementAllowed) {
+      if (rotationAllowed) {
+        // console.log(
+        //   `cubeMesh.rotation.x:\t${cubeMesh.rotation.x}\ncubeMesh.rotation.y:\t${cubeMesh.rotation.y}\ncubeMesh.rotation.z:\t${cubeMesh.rotation.z}`
+        // );
+        // console.log(`.getWorldDirection():\t${cubeMesh.getWorldDirection()}`);
+
+        // meshObj[meshObjIndex].rotation.x += timeStep;
+        meshObj[meshObjIndex].rotation.y += timeStep;
+
+        setTimeout(handleRotation, globalDelayStep);
+      }
+    }
+  }
 
   function toggleLightingIgnore() {
     console.log(`isLightingIgnored:\t${isLightingIgnored}`);
@@ -150,21 +225,35 @@ function main() {
       if (event.key == "x") {
         changeMesh();
       }
-      if (event.key == "b") {
+      if (event.key == "m") {
         printCurrentMesh();
       }
     }
 
     if (event.shiftKey == true) {
       if (event.key == "X") {
-        console.log("Pressing shift + x...");
         toggleWireframe();
+      }
+
+      if (event.key == "G") {
+        toggleMovement();
+      }
+
+      if (event.key == "B") {
+        toggleRotation();
+      }
+
+      if (event.key == "H") {
+        printKeybinds();
       }
     }
 
     if (event.altKey == true) {
       if (event.key == "x") {
         toggleLightingIgnore();
+      }
+      if (event.key == "g") {
+        toggleTranslation();
       }
     }
   }
@@ -198,11 +287,22 @@ function main() {
     event.dataTransfer.effectAllowed = "none";
   }
 
-  function handleRotation(event) {
+  function handleManualRotation(event) {
     let movementX = event.screenX - previousScreenX;
     let movementY = event.screenY - previousScreenY;
     // console.log(`\tevent.movementX:\t${movementX}`);
     // console.log(`\tevent.movementY:\t${movementY}`);
+
+    // console.log(
+    //   `.getWorldDirection: ${meshObj[meshObjIndex].getWorldDirection()}`
+    // );
+    console.log("up:");
+    console.dir(meshObj[meshObjIndex].up);
+    // console.log(
+    //   `.localToWorld:${meshObj[meshObjIndex].localToWorld(
+    //     meshObj[meshObjIndex.up]
+    //   )}`
+    // );
 
     if (event.buttons == 1) {
       // "main button" (usually left mouse button) pressed
@@ -303,7 +403,7 @@ function main() {
       // EPILEPSY WARNING @ low delays
       setTimeout(() => {
         requestAnimationFrame(changeColor);
-      }, "10");
+      }, globalDelayStep);
     }
   }
 
