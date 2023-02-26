@@ -8,8 +8,8 @@ function main() {
   let rotationDecelerationFactor = timeStep * 0.01;
   let sizeScalarStep = 0.05;
 
-  let cubeColor = [0.0, 0.0, 0.0];
-  cubeColor = hexToRGB(genRandomHexColor());
+  let sharedColor = new THREE.Color();
+  sharedColor = hexToRGB(genRandomHexColor());
 
   let endColor = [0.0, 0.0, 0.0];
   endColor = hexToRGB(genRandomHexColor());
@@ -62,7 +62,7 @@ function main() {
 
   // create a material for whatever geometry
   let phongMaterial = new THREE.MeshPhongMaterial({
-    color: rgbToHex(cubeColor),
+    color: rgbToHex(sharedColor),
   });
 
   let cubeMesh = new THREE.Mesh(boxGeometry, phongMaterial);
@@ -91,7 +91,7 @@ function main() {
   let color = 0xffffff;
   let intensity = 1;
   let light = new THREE.DirectionalLight(color, intensity);
-  light.position.set(-1, 2, 4);
+  light.position.set(0, 1, 20);
   scene.add(light);
 
   let interactableArea = document.getElementsByClassName("interactableArea")[0];
@@ -113,6 +113,13 @@ function main() {
 
   /* ======================================= FUNCTIONS ======================================== */
 
+  function toggleWireframe() {
+    console.log(`phongMaterial.wireframe:\t${phongMaterial.wireframe}`);
+    phongMaterial.wireframe
+      ? (phongMaterial.wireframe = false)
+      : (phongMaterial.wireframe = true);
+  }
+
   function handleGlobalKeydown(event) {
     if (event.ctrlKey == true) {
       if (event.key == "x") {
@@ -120,6 +127,13 @@ function main() {
       }
       if (event.key == "b") {
         printCurrentMesh();
+      }
+    }
+
+    if (event.shiftKey == true) {
+      if (event.key == "X") {
+        console.log("Pressing shift + x...");
+        toggleWireframe();
       }
     }
   }
@@ -208,7 +222,7 @@ function main() {
     console.log(`\tallowColorChanging: ${allowColorChanging}`);
 
     console.log(
-      `cubeColor:\n\tr: ${cubeColor[0]}\n\tg: ${cubeColor[1]}\n\tb: ${cubeColor[2]}`
+      `sharedColor:\n\tr: ${sharedColor[0]}\n\tg: ${sharedColor[1]}\n\tb: ${sharedColor[2]}`
     );
     console.log(
       `endColor:\n\tr: ${endColor[0]}\n\tg: ${endColor[1]}\n\tb: ${endColor[2]}`
@@ -222,7 +236,7 @@ function main() {
       // "smooth transition" between colors:
 
       // check if all elements in the arrays are equal
-      if (colorsLookSimilar(cubeColor, endColor)) {
+      if (colorsLookSimilar(sharedColor, endColor)) {
         // they are the same color: get a new color
         let randomHexColor = genRandomHexColor();
         let inRGB = hexToRGB(randomHexColor);
@@ -230,33 +244,34 @@ function main() {
         console.log(
           `endColor:\n\tr: ${endColor[0]}\n\tg: ${endColor[1]}\n\tb: ${endColor[2]}`
         );
+        phongMaterial;
       } else {
         // transition colors
-        if (cubeColor[0] <= endColor[0]) {
-          cubeColor[0] += timeStep;
+        if (sharedColor[0] <= endColor[0]) {
+          sharedColor[0] += timeStep;
         } else {
-          cubeColor[0] -= timeStep;
+          sharedColor[0] -= timeStep;
         }
 
-        if (cubeColor[1] <= endColor[1]) {
-          cubeColor[1] += timeStep;
+        if (sharedColor[1] <= endColor[1]) {
+          sharedColor[1] += timeStep;
         } else {
-          cubeColor[1] -= timeStep;
+          sharedColor[1] -= timeStep;
         }
 
-        if (cubeColor[2] <= endColor[2]) {
-          cubeColor[2] += timeStep;
+        if (sharedColor[2] <= endColor[2]) {
+          sharedColor[2] += timeStep;
         } else {
-          cubeColor[2] -= timeStep;
+          sharedColor[2] -= timeStep;
         }
       }
 
       console.log(
-        `cubeColor:\n\tr: ${cubeColor[0]}\n\tg: ${cubeColor[1]}\n\tb: ${cubeColor[2]}`
+        `sharedColor:\n\tr: ${sharedColor[0]}\n\tg: ${sharedColor[1]}\n\tb: ${sharedColor[2]}`
       );
 
       // change color
-      phongMaterial.color.set(rgbToHex(cubeColor));
+      phongMaterial.color.set(rgbToHex(sharedColor));
 
       // EPILEPSY WARNING @ low delays
       setTimeout(() => {
