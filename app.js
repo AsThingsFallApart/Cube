@@ -10,12 +10,11 @@ function main() {
   let sizeScalarStep = 0.05;
 
   let sharedColor = new THREE.Color();
-  let randHexTrip = genRandomHexTriplet();
-  sharedColor.setHex(randHexTrip);
-  // console.log(randHexTrip);
+  sharedColor.setHex(genRandomHexTriplet());
   // console.log(`sharedColor:\t${sharedColor.getHex()}`);
 
   let endColor = new THREE.Color();
+  endColor.setHex(genRandomHexTriplet());
 
   let allowColorChanging = false;
 
@@ -34,6 +33,10 @@ function main() {
 
   let isLightingIgnored = false;
   let basicMaterial = new THREE.MeshBasicMaterial({ color: sharedColor });
+  let phongMaterial = new THREE.MeshPhongMaterial({
+    color: sharedColor,
+  });
+  let materialObj = { 0: phongMaterial, 1: basicMaterial };
 
   addEventListener("resize", () => {
     console.log(`aspect: ${window.innerWidth / window.innerHeight}`);
@@ -65,11 +68,6 @@ function main() {
   let boxHeight = 1.0;
   let boxDepth = 1.0;
   let boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
-
-  // create a material for whatever geometry
-  let phongMaterial = new THREE.MeshPhongMaterial({
-    color: sharedColor,
-  });
 
   let cubeMesh = new THREE.Mesh(boxGeometry, phongMaterial);
 
@@ -120,6 +118,10 @@ function main() {
   /* ======================================= FUNCTIONS ======================================== */
 
   function toggleLightingIgnore() {
+    console.log(`isLightingIgnored:\t${isLightingIgnored}`);
+    console.log(`currentMesh:`);
+    console.log(meshObj[meshObjIndex]);
+
     isLightingIgnored
       ? (isLightingIgnored = false)
       : (isLightingIgnored = true);
@@ -136,9 +138,11 @@ function main() {
   }
 
   function toggleWireframe() {
-    phongMaterial.wireframe
-      ? (phongMaterial.wireframe = false)
-      : (phongMaterial.wireframe = true);
+    for (let indx in materialObj) {
+      materialObj[indx].wireframe
+        ? (materialObj[indx].wireframe = false)
+        : (materialObj[indx].wireframe = true);
+    }
   }
 
   function handleGlobalKeydown(event) {
@@ -286,11 +290,15 @@ function main() {
         `sharedColor:\n\tr: ${sharedColor.r}\n\tg: ${sharedColor.g}\n\tb: ${sharedColor.b}`
       );
 
-      // prompt renderer to re-render object
       // console.log(`.getHexString():\t\t${sharedColor.getHexString()}`);
       // console.log(`.getHex():\t\t\t\t${sharedColor.getHex()}`);
 
+      // update internal color property in mesh objects
       phongMaterial.color.set(sharedColor.getHex());
+
+      if (isLightingIgnored) {
+        basicMaterial.color.set(sharedColor.getHex());
+      }
 
       // EPILEPSY WARNING @ low delays
       setTimeout(() => {
