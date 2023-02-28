@@ -244,7 +244,7 @@ function main() {
     console.log("Shift + N:\tVisualize Normals");
     console.log("Shift + T:\tToggle Z-Axis Rotation");
     console.log("Ctrl + X:\tCycle Meshes");
-    console.log("Ctrl + M:\tPrint Mesh");
+    console.log("Ctrl + M:\tPrint Debug Info");
     console.log("Alt + X:\tToggle Lighting");
     console.log("Alt + G:\tToggle Translation");
 
@@ -349,7 +349,7 @@ function main() {
         changeMesh();
       }
       if (event.key == "m") {
-        printCurrentMesh();
+        printDebugInfo();
       }
     }
 
@@ -393,8 +393,17 @@ function main() {
     }
   }
 
-  function printCurrentMesh() {
+  function printDebugInfo() {
+    console.log("\nCurrent Mesh:");
     console.dir(meshObj[meshObjIndex]);
+    console.log("Current Color:");
+    console.log(
+      `\tr:\t${sharedColor.r}\n\tg:\t${sharedColor.g}\n\tb:\t${sharedColor.b}`
+    );
+    console.log("Timestep:");
+    console.log(timeStep);
+
+    console.log("");
   }
 
   function changeMesh() {
@@ -548,7 +557,11 @@ function main() {
         //   `endColor:\n\tr: ${endColor.r}\n\tg: ${endColor.g}\n\tb: ${endColor.b}`
         // );
       } else {
-        sharedColor.lerp(endColor, timeStep);
+        if (timeStep > 0) {
+          sharedColor.lerp(endColor, timeStep);
+        } else {
+          sharedColor.lerp(endColor, 0.01);
+        }
       }
 
       // console.log(
