@@ -42,13 +42,15 @@ function main() {
 
   let movementAllowed = false;
   let translationAllowed = true;
-  let rotationAllowed = true;
+  let xRotationAllowed = true;
   let foreverIncrement = 0;
 
   let allowNormalVisualization = false;
 
   let raycaster = new THREE.Raycaster();
   let pointer = new THREE.Vector2();
+
+  let zRotationAllowed = false;
 
   // adjust canvas to window's dimensions
   addEventListener("resize", () => {
@@ -154,6 +156,12 @@ function main() {
 
   /* ======================================= FUNCTIONS ======================================== */
 
+  function toggleZRotation() {
+    zRotationAllowed ? (zRotationAllowed = false) : (zRotationAllowed = true);
+
+    handleRotation();
+  }
+
   function castRay(event) {
     // to use threejs's Raycaster object,
     // 2D corodinates have to be in normalized device coordinates ("NDC") form
@@ -181,7 +189,30 @@ function main() {
 
     if (rayIntersections.length > 0) {
       for (let i = 0; i < rayIntersections.length; i++) {
-        rayIntersections[i].object.material.color.setHex(0xdaa51c);
+        let positionsBuffer =
+          rayIntersections[i].object.geometry.getAttribute("position");
+
+        console.log(positionsBuffer);
+
+        let aVertex = new THREE.Vector3(
+          positionsBuffer.getX(rayIntersections[i].face.a),
+          positionsBuffer.getY(rayIntersections[i].face.a),
+          positionsBuffer.getZ(rayIntersections[i].face.a)
+        );
+        let bVertex = new THREE.Vector3(
+          positionsBuffer.getX(rayIntersections[i].face.b),
+          positionsBuffer.getY(rayIntersections[i].face.b),
+          positionsBuffer.getZ(rayIntersections[i].face.b)
+        );
+        let cVertex = new THREE.Vector3(
+          positionsBuffer.getX(rayIntersections[i].face.c),
+          positionsBuffer.getY(rayIntersections[i].face.c),
+          positionsBuffer.getZ(rayIntersections[i].face.c)
+        );
+
+        console.log(
+          `selectedTriangle:\n\ta:\t(${aVertex.x},\n\t\t${aVertex.y},\n\t\t${aVertex.z})\n\tb:\t(${bVertex.x},\n\t\t${bVertex.y},\n\t\t${bVertex.z})\n\tc:\t(${cVertex.x},\n\t\t${cVertex.y},\n\t\t${cVertex.z})`
+        );
       }
     }
 
@@ -207,10 +238,11 @@ function main() {
   function printKeybinds() {
     console.log("Shift + X:\tToggle Wireframe");
     console.log("Shift + G:\tToggle Movement");
-    console.log("Shift + B:\tToggle Rotation");
+    console.log("Shift + B:\tToggle X-Axis Rotation");
     console.log("Shift + H:\tPrint Keybinds");
     console.log("Shift + E:\tCycle Colors");
     console.log("Shift + N:\tVisualize Normals");
+    console.log("Shift + T:\tToggle Z-Axis Rotation");
     console.log("Ctrl + X:\tCycle Meshes");
     console.log("Ctrl + M:\tPrint Mesh");
     console.log("Alt + X:\tToggle Lighting");
@@ -257,15 +289,15 @@ function main() {
     }
   }
 
-  function toggleRotation() {
-    rotationAllowed ? (rotationAllowed = false) : (rotationAllowed = true);
+  function toggleXRotation() {
+    xRotationAllowed ? (xRotationAllowed = false) : (xRotationAllowed = true);
 
     handleRotation();
   }
 
   function handleRotation() {
     if (movementAllowed) {
-      if (rotationAllowed) {
+      if (xRotationAllowed) {
         // console.log(
         //   `cubeMesh.rotation.x:\t${cubeMesh.rotation.x}\ncubeMesh.rotation.y:\t${cubeMesh.rotation.y}\ncubeMesh.rotation.z:\t${cubeMesh.rotation.z}`
         // );
@@ -273,10 +305,13 @@ function main() {
 
         // meshObj[meshObjIndex].rotation.x += timeStep;
         meshObj[meshObjIndex].rotation.y += timeStep;
-        // meshObj[meshObjIndex].rotation.z += timeStep;
-
-        setTimeout(handleRotation, globalDelayStep);
       }
+
+      if (zRotationAllowed) {
+        meshObj[meshObjIndex].rotation.z += timeStep;
+      }
+
+      setTimeout(handleRotation, globalDelayStep);
     }
   }
 
@@ -328,7 +363,7 @@ function main() {
       }
 
       if (event.key == "B") {
-        toggleRotation();
+        toggleXRotation();
       }
 
       if (event.key == "H") {
@@ -341,6 +376,10 @@ function main() {
 
       if (event.key == "N") {
         toggleNormalVisualization();
+      }
+
+      if (event.key == "T") {
+        toggleZRotation();
       }
     }
 
@@ -446,7 +485,8 @@ function main() {
   function scaleSize(event) {
     // deltaY > 0 -> make bigger ("scroll in" feeling)
     // deltaY < 0 -> make smaller ("zoom out" feeling)
-    console.log(`deltaY:\t${event.deltaY}`);
+
+    // console.log(`deltaY:\t${event.deltaY}`);
 
     if (event.deltaY > 0) {
       meshObj[meshObjIndex].geometry.scale(
@@ -511,9 +551,9 @@ function main() {
         sharedColor.lerp(endColor, timeStep);
       }
 
-      console.log(
-        `sharedColor:\n\tr: ${sharedColor.r}\n\tg: ${sharedColor.g}\n\tb: ${sharedColor.b}`
-      );
+      // console.log(
+      //   `sharedColor:\n\tr: ${sharedColor.r}\n\tg: ${sharedColor.g}\n\tb: ${sharedColor.b}`
+      // );
 
       // console.log(`.getHexString():\t\t${sharedColor.getHexString()}`);
       // console.log(`.getHex():\t\t\t\t${sharedColor.getHex()}`);
