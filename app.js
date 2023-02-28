@@ -9,7 +9,7 @@ function main() {
   let globalDelayStep = "10";
   let time = 0.0;
   let timeStep = 0.01;
-  let rotationDecelerationFactor = timeStep * 0.01;
+  let rotationAdjustmentFactor = 0.00001;
   let sizeScalarStep = 0.05;
 
   let sharedColor = new THREE.Color();
@@ -137,7 +137,7 @@ function main() {
   let interactableArea = document.getElementsByClassName("interactableArea")[0];
 
   interactableArea.addEventListener("click", paintFace);
-  interactableArea.addEventListener("wheel", scaleSize);
+  interactableArea.addEventListener("wheel", handleWheel);
 
   let invisibleDiv = document.createElement("div");
   invisibleDiv.classList = "invisibleDiv";
@@ -243,9 +243,9 @@ function main() {
         let distance = Math.sin(foreverIncrement) / 200;
         // console.log(`distance:\t${distance}`);
 
-        console.log(`x:\t${meshObj[meshObjIndex].position.x}`);
-        console.log(`y:\t${meshObj[meshObjIndex].position.y}`);
-        console.log(`z:\t${meshObj[meshObjIndex].position.z}`);
+        // console.log(`x:\t${meshObj[meshObjIndex].position.x}`);
+        // console.log(`y:\t${meshObj[meshObjIndex].position.y}`);
+        // console.log(`z:\t${meshObj[meshObjIndex].position.z}`);
 
         meshObj[meshObjIndex].translateOnAxis(
           THREE.Object3D.DEFAULT_UP,
@@ -431,6 +431,19 @@ function main() {
     previousScreenY = event.screenY;
   }
 
+  function handleWheel(event) {
+    if (event.deltaY != 0) {
+      scaleSize(event);
+    }
+
+    if (event.deltaX != 0) {
+      tuneTime(event);
+    }
+
+    console.log(`deltaX:\t${event.deltaX}`);
+    console.log(`deltaY:\t${event.deltaY}`);
+  }
+
   function scaleSize(event) {
     // deltaY > 0 -> make bigger ("scroll in" feeling)
     // deltaY < 0 -> make smaller ("zoom out" feeling)
@@ -448,6 +461,18 @@ function main() {
         1.0 - sizeScalarStep,
         1.0 - sizeScalarStep
       );
+    }
+  }
+
+  function tuneTime(event) {
+    // deltaX < 0 -> increase time step
+    // deltaX > 0 -> decrease time step
+
+    if (event.deltaX < 0) {
+      timeStep -= event.deltaX * rotationAdjustmentFactor;
+    }
+    if (event.deltaX > 0) {
+      timeStep -= event.deltaX * rotationAdjustmentFactor;
     }
   }
 
