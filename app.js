@@ -8,8 +8,7 @@ function main() {
 
   let globalDelayStep = "10";
   let time = 0.0;
-  let timeStep = 0.005;
-  let completenessRatio = 0.0;
+  let timeStep = 0.01;
   let rotationDecelerationFactor = timeStep * 0.01;
   let sizeScalarStep = 0.05;
 
@@ -48,6 +47,10 @@ function main() {
 
   let allowNormalVisualization = false;
 
+  let raycaster = new THREE.Raycaster();
+  let pointer = new THREE.Vector2();
+
+  // adjust canvas to window's dimensions
   addEventListener("resize", () => {
     console.log(`aspect: ${window.innerWidth / window.innerHeight}`);
     console.log(`\twindowWidth: ${window.innerWidth}`);
@@ -68,7 +71,12 @@ function main() {
   let camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
   // move the camera forward on the z-axis so the frustrum is looking down the -z direction
-  camera.position.z = 5;
+  camera.position.z = 4;
+
+  console.dir(camera);
+  console.log(
+    `Camera's position:\n\tx:\t${camera.position.x}\n\ty:\t${camera.position.y}\n\tz:\t${camera.position.z}`
+  );
 
   // create a 'Scene' object
   const scene = new THREE.Scene();
@@ -124,9 +132,11 @@ function main() {
   };
   let normalsVisualizerObjIndex = 0;
 
+  console.dir(cubeMesh);
+
   let interactableArea = document.getElementsByClassName("interactableArea")[0];
 
-  interactableArea.addEventListener("click", paintPoint);
+  interactableArea.addEventListener("click", paintFace);
   interactableArea.addEventListener("wheel", scaleSize);
 
   let invisibleDiv = document.createElement("div");
@@ -137,11 +147,46 @@ function main() {
   canvas.addEventListener("drag", handleManualRotation);
 
   // "global" events
-  addEventListener("keydown", handleGlobalKeydown);
+  window.addEventListener("keydown", handleGlobalKeydown);
+  window.addEventListener("pointermove", castRay);
 
   requestAnimationFrame(render);
 
   /* ======================================= FUNCTIONS ======================================== */
+
+  function castRay(event) {
+    // to use threejs's Raycaster object,
+    // 2D corodinates have to be in normalized device coordinates ("NDC") form
+    //  NDC formula: {x: (client / window) * 2 - 1, y: (client / window) * 2 + 1)}
+    //  window_topLeft = (-1, 1), window_bottomRight = (1, -1)
+    let NDC_x = (event.clientX / window.innerWidth) * 2 - 1;
+    let NDC_y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    // console.log(`NDC_x:\t${NDC_x}`);
+    // console.log(`NDC_y:\t${NDC_y}`);
+
+    pointer.set(NDC_x, NDC_y);
+
+    raycaster.setFromCamera(pointer, camera);
+  }
+
+  function visualizePointerHover() {}
+
+  function paintFace(event) {
+    console.dir(raycaster);
+
+    let rayIntersections = raycaster.intersectObject(meshObj[meshObjIndex]);
+
+    console.log(rayIntersections);
+
+    if (rayIntersections.length > 0) {
+      for (let i = 0; i < rayIntersections.length; i++) {
+        rayIntersections[i].object.material.color.setHex(0xdaa51c);
+      }
+    }
+
+    console.dir(meshObj[meshObjIndex]);
+  }
 
   function toggleNormalVisualization() {
     allowNormalVisualization
@@ -157,11 +202,6 @@ function main() {
     } else {
       scene.remove(normalsVisualizerObj[normalsVisualizerObjIndex]);
     }
-  }
-
-  function paintPoint(event) {
-    console.log("Click!");
-    console.log(event);
   }
 
   function printKeybinds() {
@@ -198,8 +238,14 @@ function main() {
     if (movementAllowed) {
       if (translationAllowed) {
         foreverIncrement += 0.01;
+
+        // distance is in the range (0, 1)
         let distance = Math.sin(foreverIncrement) / 200;
         // console.log(`distance:\t${distance}`);
+
+        console.log(`x:\t${meshObj[meshObjIndex].position.x}`);
+        console.log(`y:\t${meshObj[meshObjIndex].position.y}`);
+        console.log(`z:\t${meshObj[meshObjIndex].position.z}`);
 
         meshObj[meshObjIndex].translateOnAxis(
           THREE.Object3D.DEFAULT_UP,
@@ -227,6 +273,7 @@ function main() {
 
         // meshObj[meshObjIndex].rotation.x += timeStep;
         meshObj[meshObjIndex].rotation.y += timeStep;
+        // meshObj[meshObjIndex].rotation.z += timeStep;
 
         setTimeout(handleRotation, globalDelayStep);
       }
@@ -437,17 +484,11 @@ function main() {
         // );
       } else {
         sharedColor.lerp(endColor, timeStep);
-
-        completenessRatio += timeStep;
-
-        if (completenessRatio == 1.0) {
-          completenessRatio = 0.0;
-        }
       }
 
-      // console.log(
-      //   `sharedColor:\n\tr: ${sharedColor.r}\n\tg: ${sharedColor.g}\n\tb: ${sharedColor.b}`
-      // );
+      console.log(
+        `sharedColor:\n\tr: ${sharedColor.r}\n\tg: ${sharedColor.g}\n\tb: ${sharedColor.b}`
+      );
 
       // console.log(`.getHexString():\t\t${sharedColor.getHexString()}`);
       // console.log(`.getHex():\t\t\t\t${sharedColor.getHex()}`);
@@ -556,7 +597,7 @@ function main() {
     let greenSimilar = false;
     let blueSimilar = false;
 
-    let similarityRange = 0.1;
+    let similarityRange = 0.05;
 
     // console.log(`a_rgb:\t${a_rgb}`);
     // console.log(`b_rgb:\t${b_rgb}`);
