@@ -9,8 +9,8 @@ function main() {
   let globalDelayStep = "10";
   let time = 0.0;
   let timeStep = 0.01;
-  let rotationAdjustmentFactor = 0.00001;
-  let sizeScalarStep = 0.05;
+  let rotationAdjustmentFactor = 0.0001;
+  let sizeScalarStep = 0.0003;
 
   let sharedColor = new THREE.Color();
   sharedColor.setHex(genRandomHexTriplet());
@@ -440,26 +440,26 @@ function main() {
       tuneTime(event);
     }
 
-    console.log(`deltaX:\t${event.deltaX}`);
-    console.log(`deltaY:\t${event.deltaY}`);
+    // console.log(`deltaX:\t${event.deltaX}`);
   }
 
   function scaleSize(event) {
     // deltaY > 0 -> make bigger ("scroll in" feeling)
     // deltaY < 0 -> make smaller ("zoom out" feeling)
+    console.log(`deltaY:\t${event.deltaY}`);
 
     if (event.deltaY > 0) {
       meshObj[meshObjIndex].geometry.scale(
-        1.0 + sizeScalarStep,
-        1.0 + sizeScalarStep,
-        1.0 + sizeScalarStep
+        1.0 + sizeScalarStep * event.deltaY,
+        1.0 + sizeScalarStep * event.deltaY,
+        1.0 + sizeScalarStep * event.deltaY
       );
     }
     if (event.deltaY < 0) {
       meshObj[meshObjIndex].geometry.scale(
-        1.0 - sizeScalarStep,
-        1.0 - sizeScalarStep,
-        1.0 - sizeScalarStep
+        1.0 + sizeScalarStep * event.deltaY,
+        1.0 + sizeScalarStep * event.deltaY,
+        1.0 + sizeScalarStep * event.deltaY
       );
     }
   }
