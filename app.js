@@ -9,7 +9,7 @@ function main() {
   let globalDelayStep = "10";
   let time = 0.0;
   let timeStep = 0.01;
-  let rotationAdjustmentFactor = 0.0001;
+  let rotationAdjustmentFactor = 0.00005;
   let sizeScalarStep = 0.0003;
 
   let sharedColor = new THREE.Color();
@@ -28,10 +28,8 @@ function main() {
   let windowWidth = window.innerWidth;
   let windowHeight = window.innerHeight;
 
-  const canvas = document.querySelector("#c");
+  let canvas = document.querySelector("#c");
   canvas.draggable = true;
-  canvas.height = windowHeight;
-  canvas.width = windowWidth;
 
   let isLightingIgnored = false;
   let basicMaterial = new THREE.MeshBasicMaterial({ color: sharedColor });
@@ -40,9 +38,9 @@ function main() {
   });
   let materialObj = { 0: phongMaterial, 1: basicMaterial };
 
-  let movementAllowed = false;
-  let translationAllowed = true;
-  let xRotationAllowed = true;
+  let movementAllowed = true;
+  let translationAllowed = false;
+  let xRotationAllowed = false;
   let foreverIncrement = 0;
 
   let allowNormalVisualization = false;
@@ -51,17 +49,6 @@ function main() {
   let pointer = new THREE.Vector2();
 
   let zRotationAllowed = false;
-
-  // adjust canvas to window's dimensions
-  addEventListener("resize", () => {
-    console.log(`aspect: ${window.innerWidth / window.innerHeight}`);
-    console.log(`\twindowWidth: ${window.innerWidth}`);
-    console.log(`\twindowHeight: ${window.innerHeight}`);
-
-    aspect = window.width / window.height;
-    camera.aspect = aspect;
-    renderer.setViewport(0, 0, windowWidth, windowHeight);
-  });
 
   const renderer = new THREE.WebGLRenderer({ canvas });
 
@@ -134,13 +121,26 @@ function main() {
   };
   let normalsVisualizerObjIndex = 0;
 
+  cubeMesh.material.vertexColors = true;
+
   console.dir(cubeMesh);
+  // let colors = new Float32Array();
+  // for (let i = 0; i < 108; i++) {
+  //   colors.push(Math.random());
+  // }
+
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays
+  // https://stackoverflow.com/questions/41670308/three-buffergeometry-how-do-i-manually-set-face-colors#:~:text=geometry.setAttribute%20%28%27color%27%2C%20new%20THREE.BufferAttribute%20%28colors%2C%203%29%29%3B%20In%20the,three.js%20built-in%20material%2C%20in%20the%20material%20definition%2C%20set
+
+  // cubeMesh.geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 
   let interactableArea = document.getElementsByClassName("interactableArea")[0];
 
   interactableArea.addEventListener("click", paintFace);
   interactableArea.addEventListener("wheel", handleWheel);
+  window.addEventListener("resize", fitCanvasToWindow);
 
+  // make default drag image invisible by setting to an empty div
   let invisibleDiv = document.createElement("div");
   invisibleDiv.classList = "invisibleDiv";
   interactableArea.appendChild(invisibleDiv);
@@ -152,9 +152,20 @@ function main() {
   window.addEventListener("keydown", handleGlobalKeydown);
   window.addEventListener("pointermove", castRay);
 
+  fitCanvasToWindow();
   requestAnimationFrame(render);
 
   /* ======================================= FUNCTIONS ======================================== */
+
+  // adjust canvas to window's dimensions
+  function fitCanvasToWindow(event) {
+    canvas.width = interactableArea.clientWidth;
+    canvas.height = interactableArea.clientHeight;
+
+    camera.aspect = canvas.width / canvas.height;
+    renderer.setSize(canvas.width, canvas.height, false);
+    camera.updateProjectionMatrix();
+  }
 
   function toggleZRotation() {
     zRotationAllowed ? (zRotationAllowed = false) : (zRotationAllowed = true);
@@ -210,13 +221,15 @@ function main() {
           positionsBuffer.getZ(rayIntersections[i].face.c)
         );
 
-        console.log(
-          `selectedTriangle:\n\ta:\t(${aVertex.x},\n\t\t${aVertex.y},\n\t\t${aVertex.z})\n\tb:\t(${bVertex.x},\n\t\t${bVertex.y},\n\t\t${bVertex.z})\n\tc:\t(${cVertex.x},\n\t\t${cVertex.y},\n\t\t${cVertex.z})`
-        );
+        // console.log(
+        //   `selectedTriangle:\n\ta:\t(${aVertex.x},\n\t\t${aVertex.y},\n\t\t${aVertex.z})\n\tb:\t(${bVertex.x},\n\t\t${bVertex.y},\n\t\t${bVertex.z})\n\tc:\t(${cVertex.x},\n\t\t${cVertex.y},\n\t\t${cVertex.z})`
+        // );
+
+        // need a color attribute buffer
       }
     }
 
-    console.dir(meshObj[meshObjIndex]);
+    // console.dir(meshObj[meshObjIndex]);
   }
 
   function toggleNormalVisualization() {
@@ -381,6 +394,10 @@ function main() {
       if (event.key == "T") {
         toggleZRotation();
       }
+
+      if (event.key == "R") {
+        resetState();
+      }
     }
 
     if (event.altKey == true) {
@@ -402,6 +419,20 @@ function main() {
     );
     console.log("Timestep:");
     console.log(timeStep);
+
+    console.log("Window:");
+    console.log(`\taspect: ${window.innerWidth / window.innerHeight}`);
+    console.log(`\twindowWidth: ${window.innerWidth}`);
+    console.log(`\twindowHeight: ${window.innerHeight}`);
+
+    console.log(`\tcanvas.width: ${canvas.width}`);
+    console.log(`\tcanvas.height: ${canvas.height}\n`);
+
+    console.log(`\tdiv.width: ${interactableArea.clientWidth}`);
+    console.log(`\tdiv.height: ${interactableArea.clientHeight}`);
+
+    console.dir(canvas);
+    console.dir(interactableArea);
 
     console.log("");
   }
