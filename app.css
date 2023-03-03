@@ -1,30 +1,17 @@
 .root {
-  height: 100%;
+  /* height: 100%; */
   /* width: 100%; */
 }
 
-.slatt {
-  color: red;
-  display: flex;
-  justify-content: center;
-}
-
-.slatt:hover {
-  font-size: xx-large;
-}
-
 .body {
+  background-color: lavenderblush;
   margin: 0px;
-  height: 100%;
-  background-color: black;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  overflow: hidden;
 }
 
 .interactableArea {
-  display: flex;
-  justify-content: center;
+  height: 100vh;
+  width: 100vw;
 }
 
 .invisibleDiv {
