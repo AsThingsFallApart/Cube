@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { SrcAlphaFactor } from "three";
 import { VertexNormalsHelper } from "three/addons";
 
 main();
@@ -10,7 +11,7 @@ function main() {
   let time = 0.0;
   let timeStep = 0.01;
   let rotationAdjustmentFactor = 0.00005;
-  let sizeScalarStep = 0.0003;
+  let sizeScalarStep = 0.0008;
 
   let sharedColor = new THREE.Color();
   sharedColor.setHex(genRandomHexTriplet());
@@ -512,7 +513,7 @@ function main() {
 
   function handleWheel(event) {
     if (event.deltaY != 0) {
-      scaleSize(event);
+      moveCameraOnZ(event);
     }
 
     if (event.deltaX != 0) {
@@ -522,20 +523,30 @@ function main() {
     // console.log(`deltaX:\t${event.deltaX}`);
   }
 
+  function moveCameraOnZ(event) {
+    console.log(`camera.position.z:\t${camera.position.z}`);
+
+    if (event.deltaY > 0) {
+      camera.position.z += sizeScalarStep * event.deltaY;
+    } else {
+      camera.position.z += sizeScalarStep * event.deltaY;
+    }
+  }
+
   function scaleSize(event) {
     // deltaY > 0 -> make bigger ("scroll in" feeling)
     // deltaY < 0 -> make smaller ("zoom out" feeling)
 
     // console.log(`deltaY:\t${event.deltaY}`);
 
-    if (event.deltaY > 0) {
+    if (event.deltaY < 0) {
       meshObj[meshObjIndex].geometry.scale(
         1.0 + sizeScalarStep * event.deltaY,
         1.0 + sizeScalarStep * event.deltaY,
         1.0 + sizeScalarStep * event.deltaY
       );
     }
-    if (event.deltaY < 0) {
+    if (event.deltaY > 0) {
       meshObj[meshObjIndex].geometry.scale(
         1.0 + sizeScalarStep * event.deltaY,
         1.0 + sizeScalarStep * event.deltaY,
